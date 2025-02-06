@@ -1,3 +1,6 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using HabitTracker.kkvzx;
+using Microsoft.Data.Sqlite;
 
-Console.WriteLine("Hello, World!");
+
+Menu menu = new();
+menu.Start();
