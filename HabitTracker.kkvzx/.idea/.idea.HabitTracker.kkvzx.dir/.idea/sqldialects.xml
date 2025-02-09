@@ -3,5 +3,6 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/Menu.cs" dialect="SQLite" />
     <file url="file://$PROJECT_DIR$/Program.cs" dialect="SQLite" />
+    <file url="file://$PROJECT_DIR$/database/Database.cs" dialect="SQLite" />
   </component>
 </project>
