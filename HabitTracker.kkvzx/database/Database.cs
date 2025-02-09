@@ -126,7 +126,7 @@ Quantity INTEGER )";
 
                 if (affectedRows == 0)
                 {
-                    Console.WriteLine($"Record with Id {recordId} does not exist. Try again.");
+                    Console.WriteLine($"Faile to delete record with {recordId} id.");
                 }
                 else
                 {
@@ -177,7 +177,7 @@ Quantity INTEGER )";
         }
     }
 
-    private static bool CheckIfRecordExists(string recordId)
+    public static bool CheckIfRecordExists(string recordId)
     {
         using (var connection = new SqliteConnection(ConnectionString))
         {

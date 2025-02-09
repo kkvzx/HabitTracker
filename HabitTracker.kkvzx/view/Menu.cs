@@ -1,16 +1,18 @@
 using System.Data.SqlTypes;
 using HabitTracker.kkvzx.database;
+using HabitTracker.kkvzx.enums;
 using Microsoft.Data.Sqlite;
 
 namespace HabitTracker.kkvzx;
 
 public class Menu()
 {
+    private const string EscapeChar = "x";
     private const string ConnectionString = @"Data Source=habit-tracker.db";
 
     private SqliteConnection Connection { get; } = new(ConnectionString);
     private bool IsAppRunning { get; set; } = true;
-    private string? SelectedOption { get; set; }
+    private MenuOption SelectedOption { get; set; }
 
     public void Start()
     {
@@ -37,67 +39,93 @@ public class Menu()
         Console.WriteLine("----------------------------");
         Console.WriteLine("What option do you select?: ");
 
-        SelectedOption = GetUserInput();
+        SelectedOption = GetMenuOption();
     }
 
     private void HandleMenuSelection()
     {
         switch (SelectedOption)
         {
-            case "1":
+            case MenuOption.ShowAll:
             {
                 Database.ShowAllEntries();
                 break;
             }
-            case "2":
+            case MenuOption.Insert:
             {
                 HabitModel model = GetHabitModel();
                 Database.InsertModel(model);
                 break;
             }
-            case "3":
+            case MenuOption.Delete:
             {
                 Database.ShowAllEntries();
-                Console.WriteLine("Enter the Id of the record you want to delete: ");
-                string recordId = GetUserInput();
-                
+
+                string recordId = GetExistingRecordId();
+                if (recordId.Trim().ToLower() == EscapeChar)
+                {
+                    break;
+                }
+
                 Database.Delete(recordId);
                 break;
             }
-            case "4":
+            case MenuOption.Update:
             {
-                //Edit only desired fields
                 Database.ShowAllEntries();
-                
-                Console.WriteLine("Enter the Id of the record you want to update: ");
-                string recordId = GetUserInput();
+
+                string recordId = GetExistingRecordId();
+
+                if (recordId.Trim().ToLower() == EscapeChar)
+                {
+                    break;
+                }
+
                 Console.WriteLine("Enter updated properties");
                 HabitModel model = GetHabitModel();
                 Database.Update(recordId, model);
                 break;
             }
-            case "0":
+            case MenuOption.Exit:
             {
                 IsAppRunning = false;
                 break;
             }
         }
 
-        if (SelectedOption != "0")
+        if (SelectedOption != MenuOption.Exit)
         {
             PressKeyToContinue();
         }
     }
 
-    static void PressKeyToContinue()
+    private static void PressKeyToContinue()
     {
         Console.WriteLine("Press any key to continue...");
         Console.ReadKey();
         Console.Clear();
-        Console.WriteLine();
     }
 
-    static HabitModel GetHabitModel()
+    static string GetExistingRecordId()
+    {
+        Console.WriteLine("Enter the Id of the record (or press x to go back to menu): ");
+
+        string recordId = GetUserInput();
+        while (!Database.CheckIfRecordExists(recordId) && recordId != "x")
+        {
+            Console.WriteLine("Record with such id doesn't exist");
+            recordId = GetUserInput();
+
+            if (recordId == "x")
+            {
+                break;
+            }
+        }
+
+        return recordId;
+    }
+
+    private static HabitModel GetHabitModel()
     {
         string date = GetDateInput();
         int quantity = GetQuantityInput();
@@ -105,7 +133,25 @@ public class Menu()
         return new HabitModel(date, quantity);
     }
 
-    static string GetUserInput()
+    private static MenuOption GetMenuOption()
+    {
+        while (true)
+        {
+            if (IsValidMenuOption(GetUserInput(), out var menuOption))
+            {
+                return menuOption;
+            }
+            
+            Console.WriteLine("Enter valid menu option: ");
+        }
+    }
+    
+    private static bool IsValidMenuOption(string input, out MenuOption menuOption)
+    {
+        return Enum.TryParse(input, out menuOption) && Enum.IsDefined(typeof(MenuOption), menuOption);
+    }
+
+    private static string GetUserInput()
     {
         string? userInput = Console.ReadLine();
 
@@ -127,7 +173,7 @@ public class Menu()
     private static int GetQuantityInput()
     {
         int quantity;
-        
+
         Console.WriteLine("Please insert the quantity (integer only): ");
         while (!int.TryParse(GetUserInput(), out quantity))
         {
