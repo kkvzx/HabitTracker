@@ -8,9 +8,6 @@ namespace HabitTracker.kkvzx;
 public class Menu()
 {
     private const string EscapeChar = "x";
-    private const string ConnectionString = @"Data Source=habit-tracker.db";
-
-    private SqliteConnection Connection { get; } = new(ConnectionString);
     private bool IsAppRunning { get; set; } = true;
     private MenuOption SelectedOption { get; set; }
 
@@ -99,13 +96,6 @@ public class Menu()
         }
     }
 
-    private static void PressKeyToContinue()
-    {
-        Console.WriteLine("Press any key to continue...");
-        Console.ReadKey();
-        Console.Clear();
-    }
-
     static string GetExistingRecordId()
     {
         Console.WriteLine("Enter the Id of the record (or press x to go back to menu): ");
@@ -141,11 +131,11 @@ public class Menu()
             {
                 return menuOption;
             }
-            
+
             Console.WriteLine("Enter valid menu option: ");
         }
     }
-    
+
     private static bool IsValidMenuOption(string input, out MenuOption menuOption)
     {
         return Enum.TryParse(input, out menuOption) && Enum.IsDefined(typeof(MenuOption), menuOption);
@@ -167,7 +157,44 @@ public class Menu()
     private static string GetDateInput()
     {
         Console.WriteLine("Please insert the date: (Format: dd-mm-yyyy): ");
-        return GetUserInput();
+        string userInput = GetUserInput();
+
+        while (!IsValidDate(userInput))
+        {
+            Console.WriteLine("Invalid date format, please try again: ");
+            userInput = GetUserInput();
+        }
+
+        return userInput;
+    }
+
+    private static bool IsValidDate(string userDate)
+    {
+        string[] dateElements = userDate.Split('-');
+        int[] parsedDateElements = new int[dateElements.Length];
+
+        if (dateElements.Length != 3)
+        {
+            return false;
+        }
+
+        if (dateElements[0].Length != 2 || dateElements[1].Length != 2 || dateElements[2].Length != 4)
+        {
+            return false;
+        }
+        
+        if (!int.TryParse(dateElements[0], out int day) || !int.TryParse(dateElements[1], out int month) ||
+            !int.TryParse(dateElements[2], out int year))
+        {
+            return false;
+        }
+
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 0 || year > 9999)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private static int GetQuantityInput()
@@ -177,8 +204,16 @@ public class Menu()
         Console.WriteLine("Please insert the quantity (integer only): ");
         while (!int.TryParse(GetUserInput(), out quantity))
         {
+            Console.WriteLine("Please enter integer: ");
         }
 
         return quantity;
+    }
+
+    private static void PressKeyToContinue()
+    {
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
+        Console.Clear();
     }
 }
