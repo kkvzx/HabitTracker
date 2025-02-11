@@ -14,6 +14,7 @@ public class Menu()
     public void Start()
     {
         Database.CreateTable();
+        Database.SeedData();
 
         while (IsAppRunning)
         {
@@ -156,9 +157,14 @@ public class Menu()
 
     private static string GetDateInput()
     {
-        Console.WriteLine("Please insert the date: (Format: dd-mm-yyyy): ");
+        Console.WriteLine("\nPlease insert the date in format 'dd-mm-yyyy'\n(type today to add today's date): ");
         string userInput = GetUserInput();
 
+        if (userInput.Trim().ToLower() == "today")
+        {
+            userInput = DateTime.Today.ToString("dd-MM-yyyy");
+        }
+        
         while (!IsValidDate(userInput))
         {
             Console.WriteLine("Invalid date format, please try again: ");
@@ -171,7 +177,6 @@ public class Menu()
     private static bool IsValidDate(string userDate)
     {
         string[] dateElements = userDate.Split('-');
-        int[] parsedDateElements = new int[dateElements.Length];
 
         if (dateElements.Length != 3)
         {

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.InteropServices.JavaScript;
+using System.Text;
 using HabitTracker.kkvzx.database;
 using Microsoft.Data.Sqlite;
 
@@ -16,13 +17,49 @@ public static class Database
             connection.Open();
             var tableCommand = connection.CreateCommand();
 
-            tableCommand.CommandText = @"CREATE TABLE IF NOT EXISTS skill_workout (
+            tableCommand.CommandText = @"CREATE TABLE IF NOT EXISTS habits (
 Id INTEGER PRIMARY KEY AUTOINCREMENT,
 Date TEXT,
 Quantity INTEGER )";
             tableCommand.ExecuteNonQuery();
 
             connection.Close();
+        }
+    }
+
+    public static void SeedData()
+    {
+        using (var connection = new SqliteConnection(ConnectionString))
+        {
+            List<HabitModel> recordsToSeed = HabitSeeder.Seed(15);
+
+            try
+            {
+                connection.Open();
+                var tableCommand = connection.CreateCommand();
+                var command = "INSERT INTO habits(Date, Quantity) VALUES ";
+                
+                foreach (var record in recordsToSeed)
+                {
+                    command+=$"('{record.Date}', {record.Quantity}),";
+                }
+                
+                command = command.Remove(command.LastIndexOf(',')) + ";";
+                tableCommand.CommandText = command;
+                tableCommand.ExecuteNonQuery();
+
+                Console.WriteLine($"Data seeded successfully");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadKey();
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
     }
 
@@ -36,10 +73,10 @@ Quantity INTEGER )";
                 var tableCommand = connection.CreateCommand();
 
                 tableCommand.CommandText =
-                    $"INSERT INTO skill_workout(Date, Quantity) VALUES('{habitModel.Date}', {habitModel.Quantity})";
+                    $"INSERT INTO habits(Date, Quantity) VALUES('{habitModel.Date}', {habitModel.Quantity})";
                 tableCommand.ExecuteNonQuery();
 
-                Console.WriteLine($"Successfully added record to skill_workout");
+                Console.WriteLine($"Successfully added record to habits");
             }
             catch (Exception ex)
             {
@@ -66,7 +103,7 @@ Quantity INTEGER )";
 
                 var tableCommand = connection.CreateCommand();
 
-                tableCommand.CommandText = $"SELECT * FROM skill_workout";
+                tableCommand.CommandText = $"SELECT * FROM habits";
 
                 var reader = tableCommand.ExecuteReader();
 
@@ -121,7 +158,7 @@ Quantity INTEGER )";
                 var tableCommand = connection.CreateCommand();
 
                 tableCommand.CommandText =
-                    $"DELETE FROM skill_workout WHERE Id='{recordId}'";
+                    $"DELETE FROM habits WHERE Id='{recordId}'";
                 int affectedRows = tableCommand.ExecuteNonQuery();
 
                 if (affectedRows == 0)
@@ -130,7 +167,7 @@ Quantity INTEGER )";
                 }
                 else
                 {
-                    Console.WriteLine($"Successfully deleted {recordId} from skill_workout table");
+                    Console.WriteLine($"Successfully deleted {recordId} from habits table");
                 }
             }
             catch (Exception ex)
@@ -161,10 +198,10 @@ Quantity INTEGER )";
 
                 var tableCommand = connection.CreateCommand();
                 tableCommand.CommandText =
-                    $"UPDATE skill_workout SET Date = '{habitModel.Date}', Quantity = '{habitModel.Quantity}' WHERE Id='{recordId}'";
+                    $"UPDATE habits SET Date = '{habitModel.Date}', Quantity = '{habitModel.Quantity}' WHERE Id='{recordId}'";
 
 
-                Console.WriteLine($"Successfully updated record with {recordId} id in skill_workout table");
+                Console.WriteLine($"Successfully updated record with {recordId} id in habits table");
             }
             catch (Exception ex)
             {
@@ -184,7 +221,7 @@ Quantity INTEGER )";
             connection.Open();
             var checkCommand = connection.CreateCommand();
 
-            checkCommand.CommandText = $"SELECT * FROM skill_workout WHERE Id='{recordId}'";
+            checkCommand.CommandText = $"SELECT * FROM habits WHERE Id='{recordId}'";
             int checkQuery = Convert.ToInt32(checkCommand.ExecuteScalar());
 
             return checkQuery > 0;
